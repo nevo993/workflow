@@ -28,13 +28,13 @@ const App: React.FC = () => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
   const deleteNode = useCallback((id: string) => {
-    setNodes((nds) => nds.filter((n) => n.id != id));
-    setEdges((eds) => eds.filter((e) => e.source != id && e.target != id));
+    setNodes((nds) => nds.filter((n) => n.id !== id));
+    setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
     setSelectedNodeId((cur) => (cur === id ? null : cur));
   }, []);
 
   const deleteEdge = useCallback((id: string) => {
-    setEdges((eds) => eds.filter((e) => e.id != id));
+    setEdges((eds) => eds.filter((e) => e.id !== id));
   }, []);
 
   const addNode = useCallback(() => {
@@ -45,7 +45,7 @@ const App: React.FC = () => {
       type: "workflowNode",
       position: { x: Math.random() * 400, y: Math.random() * 300 },
       data: {
-        label: "Nowa chmurka",
+        label: "New Node",
         description: "",
         color,
         onDelete: deleteNode,
@@ -108,7 +108,6 @@ const App: React.FC = () => {
         try {
           const { nodes: loadedNodes, edges: loadedEdges } = JSON.parse(text);
 
-          // reattach callbacks
           const nodesWithCb: WFNode[] = loadedNodes.map((n: any) => ({
             ...n,
             type: "workflowNode",
@@ -123,7 +122,7 @@ const App: React.FC = () => {
           setNodes(nodesWithCb);
           setEdges(edgesWithCb);
         } catch (err) {
-          console.error("Błąd podczas wczytywania workflow:", err);
+          console.error("Error loading workflow:", err);
         }
       };
       reader.readAsText(file);
@@ -136,51 +135,37 @@ const App: React.FC = () => {
     [selectedNodeId, nodes]
   );
 
-  const nodeTypes = useMemo(
-    () => ({ workflowNode: WorkflowNode }),
-    []
-  );
-  const edgeTypes = useMemo(
-    () => ({ deletable: DeletableEdge }),
-    []
-  );
+  const nodeTypes = useMemo(() => ({ workflowNode: WorkflowNode }), []);
+  const edgeTypes = useMemo(() => ({ deletable: DeletableEdge }), []);
 
   return (
     <div className="w-screen h-screen">
-      {/* Top controls */}
       <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 flex gap-4">
         <button
           onClick={addNode}
           className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl"
         >
-          Dodaj chmurkę
+          Add Node
         </button>
         <button
           onClick={() => exportWorkflowAsText(nodes, edges)}
           className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl"
         >
-          Zapisz TXT (dla GPT)
+          Save TXT (for GPT)
         </button>
-
         <button
           onClick={saveToFile}
           className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl"
         >
-          Zapisz workflow
+          Save Workflow
         </button>
         <label className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl cursor-pointer">
-          Wczytaj workflow
-          <input
-            type="file"
-            accept="application/json"
-            className="hidden"
-            onChange={loadFromFile}
-          />
+          Load Workflow
+          <input type="file" accept="application/json" className="hidden" onChange={loadFromFile} />
         </label>
       </div>
 
       <ReactFlow
-        onEdgeClick={(_, edge) => deleteEdge(edge.id)}
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
@@ -189,6 +174,7 @@ const App: React.FC = () => {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeClick={onNodeClick}
+        onEdgeClick={(_, edge) => deleteEdge(edge.id)}
         fitView
       >
         <Background />
@@ -198,14 +184,14 @@ const App: React.FC = () => {
 
       {selectedNode && (
         <div className="absolute right-4 top-4 w-80 bg-white shadow-2xl rounded-2xl p-4 z-50">
-          <h2 className="font-bold text-lg mb-2">Szczegóły chmurki</h2>
-          <label className="text-sm text-gray-700">Tytuł:</label>
+          <h2 className="font-bold text-lg mb-2">Node Details</h2>
+          <label className="text-sm text-gray-700">Title:</label>
           <input
             value={selectedNode.data.label}
             onChange={(e) => updateNodeData("label", e.target.value)}
             className="w-full border p-2 rounded mb-2"
           />
-          <label className="text-sm text-gray-700">Opis:</label>
+          <label className="text-sm text-gray-700">Description:</label>
           <textarea
             value={selectedNode.data.description}
             onChange={(e) => updateNodeData("description", e.target.value)}
